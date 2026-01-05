@@ -1,6 +1,6 @@
+from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from datetime import datetime, UTC
 
 Base = declarative_base()
 
@@ -14,4 +14,4 @@ class CVE(Base):
     published_date = Column(DateTime)
     last_modified = Column(DateTime)
     status = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))

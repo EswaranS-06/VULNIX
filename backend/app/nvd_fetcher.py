@@ -1,13 +1,10 @@
 import nvdlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
+from app.utils import parse_nvd_datetime
 
 def fetch_recent_cves(days=1, limit=20):
-    """
-    Fetch CVEs published in the last N days.
-    Pure function: no DB, no FastAPI.
-    """
-    start_date = datetime.utcnow() - timedelta(days=days)
-    end_date = datetime.utcnow()
+    start_date = datetime.now(UTC) - timedelta(days=days)
+    end_date = datetime.now(UTC)
 
     cve_iter = nvdlib.searchCVE(
         pubStartDate=start_date,
@@ -23,8 +20,8 @@ def fetch_recent_cves(days=1, limit=20):
             if cve.descriptions else "",
             "cvss_score": cve.score[1] if cve.score else None,
             "severity": cve.score[2] if cve.score else "UNKNOWN",
-            "published_date": cve.published,
-            "last_modified": cve.lastModified
+            "published_date": parse_nvd_datetime(cve.published),
+            "last_modified": parse_nvd_datetime(cve.lastModified)
         })
 
         if len(results) >= limit:
