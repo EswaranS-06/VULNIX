@@ -1,0 +1,64 @@
+# NVD CVE Tracker - Frontend Implementation Plan
+
+Design and build a clean, professional web dashboard for the NVD CVE Tracker application.
+The UI will focus on clarity, professional aesthetics (light theme), and functionality (sync, filter, view details).
+
+## User Review Required
+
+- **Tech Stack**: Vanilla HTML/CSS/JS (Lightweight, fits current structure).
+- **Backend Assumption**: Backend API structure is fixed as per [backend/app/api.py](file:///home/rex/Projects/NVD-Viewer/backend/app/api.py).
+- **Mock Data**: Will initially stick to Mock Data for UI development to ensure aesthetics are perfect before integration.
+
+## Proposed Changes
+
+### Frontend Structure (`/frontend`)
+
+#### [index.html](file:///home/rex/Projects/NVD-Viewer/frontend/index.html)
+- Main entry point.
+- Single root container `#app`.
+- Import styles and main script.
+
+#### [style.css](file:///home/rex/Projects/NVD-Viewer/frontend/style.css)
+- **Theme**: Light, professional, clean typography (Inter/system-ui).
+- **Components**: Card layout, Table styles, Badges for severity.
+- **Utilities**: Flexbox/Grid helpers, Colors (Red/Orange/Yellow/Green for severity).
+
+#### [app.js](file:///home/rex/Projects/NVD-Viewer/frontend/app.js)
+- **Router**: Simple hash-based router (`#/`, `#/cve/:id`).
+- **State Management**: Simple state for tracking current view and filters.
+- **Render Logic**: Mounting components to `#app`.
+
+#### [api.js](file:///home/rex/Projects/NVD-Viewer/frontend/api.js)
+- Fetch wrapper.
+- Toggle between Mock and Real API.
+
+#### [components.js](file:///home/rex/Projects/NVD-Viewer/frontend/components.js)
+- **Header**: Title + Sync Button.
+- **SummaryCards**: Total/New/Critical counts.
+- **Filters**: Severity Dropdown + Search Input.
+- **CVETable**: Data table with columns and color-coded badges.
+- **CVEDetail**: Detailed view with back navigation.
+
+## Verification Plan
+
+### Automated Tests
+- None for Frontend HTML/CSS/JS (Visual verification required).
+- Backend assumed to be working.
+
+### Manual Verification
+1. **Visual Check**:
+   - Open `frontend/index.html` in browser.
+   - Verify layout matches the ASCII design.
+   - Verify "Clean, Professional, Light Theme".
+
+2. **Functional Check**:
+   - **Sync**: Click "Sync CVEs", verify loading state and data update.
+   - **Filter**: Select "Critical", verify table shows only Critical items.
+   - **Search**: Type a CVE ID, verify filtering.
+   - **Detail**: Click a CVE, verify detail view loads with correct info.
+   - **Navigation**: Click "Back", verify return to Dashboard with previous state.
+
+3. **Backend Integration**:
+   - Run backend: `uv run uvicorn backend.app.main:app --reload` (port 8000).
+   - Serve frontend: `python3 -m http.server 3000 -d frontend`.
+   - Verify real data fetching.
