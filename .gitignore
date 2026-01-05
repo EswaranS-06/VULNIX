@@ -185,14 +185,6 @@ build/
 *.xccheckout
 *.xcscmblueprint
 
-# Databases
-*.sqlite
-*.sqlite3
-*.db
-*.db-journal
-*.sql
-*.bak
-
 # Certificates, keys, secrets
 *.pem
 *.key
