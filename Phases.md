@@ -225,6 +225,16 @@ We **do NOT mix frontend while backend is unstable**.
 * Route using query param
 * Fetch `/api/cves/{id}`
 
+| Method | Endpoint                     | Purpose            |
+| ------ | ---------------------------- | ------------------ |
+| GET    | `/`                          | Health check       |
+| POST   | `/api/sync-cves`             | Fetch + store CVEs |
+| GET    | `/api/cves`                  | List all CVEs      |
+| GET    | `/api/cves/new`              | Only NEW CVEs      |
+| GET    | `/api/cves/{cve_id}`         | CVE details        |
+| GET    | `/api/cves/severity/{level}` | Filter by severity |
+
+
 ---
 
 ## 🔹 FRONTEND FREEZE

@@ -9,6 +9,7 @@ dependencies = [
     "nvdlib>=0.8.3",
     "pytest>=9.0.2",
     "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.45",
     "uvicorn>=0.40.0",
 ]
