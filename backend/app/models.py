@@ -11,6 +11,10 @@ class CVE(Base):
     description = Column(String)
     severity = Column(String)
     cvss_score = Column(Float)
+    vector_string = Column(String)  # Added
+    cwe_id = Column(String)         # Added
+    references = Column(String)     # Added (JSON string)
+    configurations = Column(String) # Added (CPEs as JSON string)
     published_date = Column(DateTime)
     last_modified = Column(DateTime)
     status = Column(String)

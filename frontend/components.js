@@ -63,7 +63,7 @@ const Components = {
             <tr>
                 <td><a href="#/cve/${cve.cve_id}" class="code-font" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">${cve.cve_id}</a></td>
                 <td><span class="badge badge-${(cve.severity || 'unknown').toLowerCase()}">${cve.severity || 'Unknown'}</span></td>
-                <td>${cve.cvss}</td>
+                <td>${cve.cvss_score || 'N/A'}</td>
                 <td><span class="badge badge-${(cve.status || 'unknown').toLowerCase()}">${cve.status || 'Unknown'}</span></td>
                 <td>${new Date(cve.published_date).toLocaleDateString()}</td>
                 <td>
@@ -93,35 +93,166 @@ const Components = {
         `;
     },
 
-    CVEDetail: (cve) => `
-        <div class="card" style="max-width: 800px; margin: 0 auto;">
-            <div class="detail-header">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="code-font" style="margin: 0; font-size: 1.5rem;">${cve.cve_id}</h2>
-                    <a href="#/" class="btn btn-outline">← Back to Dashboard</a>
-                </div>
-                <div class="flex gap-2">
-                    <span class="badge badge-${(cve.severity || 'unknown').toLowerCase()}">${cve.severity || 'Unknown'}</span>
-                    <span class="badge" style="background: #f1f5f9; color: #475569;">CVSS: ${cve.cvss}</span>
-                    <span class="badge badge-${(cve.status || 'unknown').toLowerCase()}">${cve.status || 'Unknown'}</span>
+    CVEDetail: (cve) => {
+        let refs = [];
+        let configs = [];
+        try {
+            refs = cve.references ? JSON.parse(cve.references) : [];
+            if (!Array.isArray(refs)) refs = [];
+        } catch (e) {
+            console.error("Error parsing references", e);
+            refs = [];
+        }
+
+        try {
+            configs = cve.configurations ? JSON.parse(cve.configurations) : [];
+            if (!Array.isArray(configs)) configs = [];
+        } catch (e) {
+            console.error("Error parsing configurations", e);
+            configs = [];
+        }
+
+        const score = cve.cvss_score || 0;
+        const severityClass = (cve.severity || 'unknown').toLowerCase();
+
+        return `
+        <div class="w-full fade-in" style="max-width: 1400px; margin: 0 auto; padding-bottom: 4rem;">
+            <!-- Navigation & Breadcrumbs -->
+            <div class="mb-8 flex items-center justify-between">
+                <a href="#/" class="btn-glass flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Back to Dashboard
+                </a>
+                <div class="text-xs font-mono text-slate-500 bg-white/50 px-3 py-1 rounded-full border border-slate-200">
+                    ID: ${cve.cve_id} • RECORDED: ${new Date(cve.created_at).toLocaleDateString()}
                 </div>
             </div>
 
-            <div class="mb-6">
-                <div class="detail-label">Description</div>
-                <p class="detail-text">${cve.description}</p>
+            <!-- Header Section -->
+            <div class="header-banner mb-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="badge badge-${severityClass}" style="transform: scale(1.1);">${cve.severity || 'Unknown'}</span>
+                            <span class="badge badge-${(cve.status || 'unknown').toLowerCase()}">${cve.status || 'Unknown'}</span>
+                        </div>
+                        <h1 class="cve-title-gradient">${cve.cve_id}</h1>
+                    </div>
+                    <div class="score-display-premium">
+                        <div class="label">CVSS SCORE</div>
+                        <div class="value" style="color: var(--severity-${severityClass}-text)">${score.toFixed(1)}</div>
+                        <div class="meter-bg">
+                            <div class="meter-fill" style="width: ${score * 10}%; background: var(--severity-${severityClass}-text)"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex gap-6" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                <div>
-                    <div class="detail-label">Published Date</div>
-                    <div class="detail-text code-font" style="font-size: 0.875rem;">${new Date(cve.published_date).toLocaleString()}</div>
+            <div class="grid grid-cols-12 gap-8">
+                <!-- Main Content (Left) -->
+                <div class="col-span-12 lg:col-span-8 flex flex-col gap-8">
+                    
+                    <!-- Description Section (Emphasized with a soft highlight) -->
+                    <section class="premium-card description-section">
+                        <div class="section-header">
+                            <div class="icon-box info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+                            <h3>Vulnerability Description</h3>
+                        </div>
+                        <div class="content">
+                            <p class="description-text">${cve.description || 'No description available for this vulnerability.'}</p>
+                        </div>
+                    </section>
+
+                    <!-- Affected Products (CPE) -->
+                    <section class="premium-card cpe-section">
+                        <div class="section-header">
+                            <div class="icon-box stack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/></svg></div>
+                            <h3>Affected Configurations (CPE)</h3>
+                        </div>
+                        <div class="content">
+                            <div class="cpe-grid">
+                                ${configs.length > 0
+                ? configs.map(c => `<div class="cpe-item"><span class="cpe-tag">${c}</span></div>`).join('')
+                : '<div class="empty-state">No specific hardware or software configurations listed.</div>'}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- References Section -->
+                    <section class="premium-card references-section">
+                        <div class="section-header">
+                            <div class="icon-box link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+                            <h3>Technical References</h3>
+                        </div>
+                        <div class="content">
+                            <div class="reference-links">
+                                ${refs.length > 0
+                ? refs.map(r => `
+                                        <a href="${r}" target="_blank" class="ref-item">
+                                            <span class="ref-url">${r}</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                        </a>`).join('')
+                : '<div class="empty-state">No external references found.</div>'}
+                            </div>
+                        </div>
+                    </section>
                 </div>
-                <div>
-                    <div class="detail-label">Last Modified</div>
-                    <div class="detail-text code-font" style="font-size: 0.875rem;">${new Date(cve.last_modified_date).toLocaleString()}</div>
+
+                <!-- Sidebar Content (Right) -->
+                <div class="col-span-12 lg:col-span-4 flex flex-col gap-8">
+                    
+                    <!-- Metrics Section -->
+                    <aside class="premium-card metrics-section">
+                        <div class="section-header">
+                            <div class="icon-box activity"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                            <h3>CVSS Metrics</h3>
+                        </div>
+                        <div class="content">
+                            <div class="metric-item mb-4">
+                                <div class="metric-label">Vector String</div>
+                                <div class="vector-code">${cve.vector_string || 'N/A'}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Weakness ID</div>
+                                <div class="cwe-badge">${cve.cwe_id || 'NVD-CWE-noinfo'}</div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Timeline Section -->
+                    <aside class="premium-card timeline-section">
+                        <div class="section-header">
+                            <div class="icon-box clock"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                            <h3>CVE Timeline</h3>
+                        </div>
+                        <div class="content">
+                            <div class="timeline-trail">
+                                <div class="timeline-step">
+                                    <div class="step-point"></div>
+                                    <div class="step-info">
+                                        <div class="step-label">Published</div>
+                                        <div class="step-date">${new Date(cve.published_date).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div class="timeline-step">
+                                    <div class="step-point modified"></div>
+                                    <div class="step-info">
+                                        <div class="step-label">Last Modified</div>
+                                        <div class="step-date">${new Date(cve.last_modified).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Tips / Info -->
+                    <div class="info-alert">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <p>This data is synchronized from the official NVD feeds. CVSS scores may be preliminary for very new entries.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    `
+        `;
+    }
 };
