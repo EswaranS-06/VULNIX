@@ -4,8 +4,10 @@ const app = {
         filterSeverity: 'ALL',
         searchQuery: '',
         loading: false,
-        currentView: 'dashboard', // dashboard | detail
-        selectedCVE: null
+        currentView: 'dashboard', // dashboard | detail | planner | assets
+        currentRoute: 'dashboard',
+        selectedCVE: null,
+        assets: ['Linux Core', 'Docker', 'MySQL']
     },
 
     init() {
@@ -29,12 +31,22 @@ const app = {
     },
 
     handleRoute() {
-        const hash = window.location.hash;
+        const hash = window.location.hash || '#/';
         if (hash.startsWith('#/cve/')) {
             const id = hash.split('/cve/')[1];
+            this.state.currentRoute = 'dashboard';
             this.loadDetail(id);
+        } else if (hash === '#/planner') {
+            this.state.currentView = 'planner';
+            this.state.currentRoute = 'planner';
+            this.render();
+        } else if (hash === '#/assets') {
+            this.state.currentView = 'assets';
+            this.state.currentRoute = 'assets';
+            this.render();
         } else {
             this.state.currentView = 'dashboard';
+            this.state.currentRoute = 'dashboard';
             this.state.selectedCVE = null;
             this.render();
         }
@@ -67,7 +79,7 @@ const app = {
             await this.fetchData(); // Refresh list
         } catch (error) {
             console.error('Sync failed:', error);
-            alert('Sync failed. Please check console.');
+            alert('Sync failed.');
         } finally {
             if (btn) {
                 btn.innerHTML = '<span>Sync CVEs</span>';
@@ -86,10 +98,30 @@ const app = {
         this.render();
     },
 
+    toggleAsset(asset) {
+        const index = this.state.assets.indexOf(asset);
+        if (index > -1) {
+            this.state.assets.splice(index, 1);
+        } else {
+            this.state.assets.push(asset);
+        }
+        this.render();
+    },
+
     getFilteredCVEs() {
+        const severityMap = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'ALL': 0 };
+        const threshold = severityMap[this.state.filterSeverity] || 0;
+
         return this.state.cves.filter(cve => {
-            const matchesSeverity = this.state.filterSeverity === 'ALL' || cve.severity === this.state.filterSeverity;
-            const matchesSearch = cve.cve_id.toLowerCase().includes(this.state.searchQuery);
+            const cveSeverity = severityMap[cve.severity] || 0;
+            const matchesSeverity = threshold === 0 || cveSeverity >= threshold;
+
+            const search = this.state.searchQuery.toLowerCase();
+            const matchesSearch =
+                cve.cve_id.toLowerCase().includes(search) ||
+                (cve.description && cve.description.toLowerCase().includes(search)) ||
+                (cve.cwe_id && cve.cwe_id.toLowerCase().includes(search));
+
             return matchesSeverity && matchesSearch;
         });
     },
@@ -105,29 +137,39 @@ const app = {
     render() {
         const appEl = document.getElementById('app');
 
+        let content = '';
+
         if (this.state.loading && !this.state.cves.length) {
-            appEl.innerHTML = '<div style="text-align: center; margin-top: 4rem;">Loading...</div>';
-            return;
-        }
-
-        if (this.state.currentView === 'detail') {
+            content = '<div style="text-align: center; margin-top: 4rem;">Loading Global Intelligence...</div>';
+        } else if (this.state.currentView === 'detail') {
             if (!this.state.selectedCVE) {
-                appEl.innerHTML = '<div style="text-align: center; margin-top: 4rem;">Loading details...</div>';
-                return;
+                content = '<div style="text-align: center; margin-top: 4rem;">Loading details...</div>';
+            } else {
+                content = Components.CVEDetail(this.state.selectedCVE);
             }
-            appEl.innerHTML = Components.CVEDetail(this.state.selectedCVE);
-            return;
+        } else if (this.state.currentView === 'planner') {
+            const criticals = this.state.cves.filter(c => c.severity === 'CRITICAL');
+            content = Components.SafetyPlanner(criticals);
+        } else if (this.state.currentView === 'assets') {
+            content = Components.AssetProfile(this.state.assets);
+        } else {
+            // Dashboard View
+            const filteredCVEs = this.getFilteredCVEs();
+            const stats = this.getStats();
+            content = `
+                ${Components.Header()}
+                ${Components.SummaryCards(stats)}
+                ${Components.CVETable(filteredCVEs)}
+            `;
         }
-
-        // Dashboard View
-        const filteredCVEs = this.getFilteredCVEs();
-        const stats = this.getStats();
 
         appEl.innerHTML = `
-            ${Components.Header({})}
-            ${Components.SummaryCards(stats)}
-            ${Components.Filters({ currentSeverity: this.state.filterSeverity })}
-            ${Components.CVETable(filteredCVEs)}
+            <div class="layout-wrapper">
+                ${Components.Sidebar(this.state.currentRoute)}
+                <main class="main-content">
+                    ${content}
+                </main>
+            </div>
         `;
     }
 };

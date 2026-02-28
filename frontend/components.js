@@ -1,50 +1,223 @@
 const Components = {
-    Header: ({ onSync }) => `
-        <header class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-2">
-                <div style="width: 32px; height: 32px; background: var(--primary-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">N</div>
-                <h1>NVD CVE Tracker</h1>
+    Sidebar: (currentRoute) => `
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <span class="font-bold text-lg tracking-tight">SafetyIntel Hub</span>
             </div>
-            <button onclick="app.handleSync()" class="btn btn-primary" id="sync-btn">
-                <span>Sync CVEs</span>
-            </button>
+            <nav class="nav-list">
+                <a href="#/" class="nav-item ${currentRoute === 'dashboard' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <span>Threat Dashboard</span>
+                </a>
+                <a href="#/planner" class="nav-item ${currentRoute === 'planner' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><rect x="2" y="9" width="20" height="6" rx="2"/></svg>
+                    <span>Safety Planner</span>
+                </a>
+                <a href="#/assets" class="nav-item ${currentRoute === 'assets' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                    <span>Asset Profile</span>
+                </a>
+            </nav>
+            <div class="mt-auto">
+                <div class="stat-premium-card border-blue" style="padding: 1rem; border-radius: 12px; margin-bottom: 0;">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">PRO PROTECTION</div>
+                    <div class="text-xs font-semibold text-slate-600 leading-tight">Your safety score is currently at 84%</div>
+                </div>
+            </div>
+        </aside>
+    `,
+
+    Header: () => `
+        <header class="flex items-center justify-between mb-10 fade-in">
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="font-bold text-2xl tracking-tight text-slate-900">Intelligence Feed</h1>
+                    <p class="text-xs text-slate-500 font-medium uppercase tracking-widest">Real-time threat monitoring</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-tighter">System Status</div>
+                    <div class="flex items-center gap-1.5 justify-end mt-0.5">
+                        <span class="status-dot"></span>
+                        <span class="text-xs font-bold text-slate-700">All Systems Operational</span>
+                    </div>
+                </div>
+                <button onclick="app.handleSync()" class="btn-premium pulse" id="sync-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9V3"/><path d="M16 12l5-5-5-5"/></svg>
+                    <span>Sync Intelligence</span>
+                </button>
+            </div>
         </header>
     `,
 
     SummaryCards: ({ total, newCount, critical }) => `
-        <div class="flex gap-4 mb-6">
-            <div class="card stat-card">
-                <div class="stat-label">Total CVEs</div>
-                <div class="stat-value">${total}</div>
+        <div class="dashboard-stats-grid mb-10 fade-in">
+            <div class="stat-premium-card border-blue">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="icon bg-blue-50 text-blue-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+                    <span class="badge badge-blue">Global Feed</span>
+                </div>
+                <div class="value">${total}</div>
+                <div class="label">Total Intelligence Records</div>
+                <p class="desc">Actively tracking vulnerabilities from NVD</p>
             </div>
-            <div class="card stat-card">
-                <div class="stat-label">New CVEs</div>
-                <div class="stat-value" style="color: var(--primary-color)">${newCount}</div>
+            <div class="stat-premium-card border-purple">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="icon bg-purple-50 text-purple-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></div>
+                    <span class="badge badge-purple">Emerging Threats</span>
+                </div>
+                <div class="value">${newCount}</div>
+                <div class="label">New Threats Today</div>
+                <p class="desc">Potential zero-day and emerging hazards</p>
             </div>
-            <div class="card stat-card">
-                <div class="stat-label">Critical CVEs</div>
-                <div class="stat-value" style="color: var(--severity-critical-text)">${critical}</div>
+            <div class="stat-premium-card border-red">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="icon bg-red-50 text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+                    <span class="badge badge-red pulse-slow">Action Required</span>
+                </div>
+                <div class="value">${critical}</div>
+                <div class="label">Critical Risks</div>
+                <p class="desc">High-severity vulnerabilities impacting safety</p>
+            </div>
+        </div>
+    `,
+
+    SafetyPlanner: (criticalCVEs) => `
+        <div class="fade-in">
+            <div class="section-title-box mb-8">
+                <h2 class="text-2xl font-black text-slate-900">Safety Action Planner</h2>
+                <p class="text-slate-500">Prioritized mitigation steps based on active threats in your environment.</p>
+            </div>
+
+            <div class="grid grid-cols-12 gap-6 w-full h-full" style="display: grid;">
+                <div class="col-span-8">
+                    <div class="premium-card mb-6">
+                        <div class="section-header">
+                            <div class="icon-box info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><rect x="2" y="9" width="20" height="6" rx="2"/></svg></div>
+                            <h3>Immediate Mitigation Queue</h3>
+                        </div>
+                        <div class="content">
+                            ${criticalCVEs.length > 0 ? criticalCVEs.map((cve, i) => `
+                                <div class="planner-item ${i === 0 ? 'priority-high' : ''}">
+                                    <div class="flex items-start gap-4">
+                                        <div class="check-box"></div>
+                                        <div>
+                                            <div class="text-sm font-bold text-slate-800">${cve.cve_id} - Patching Required</div>
+                                            <p class="text-xs text-slate-500 mt-1">${cve.description.substring(0, 150)}...</p>
+                                            <div class="flex gap-2 mt-3">
+                                                <span class="badge badge-outline-critical">Priority: High</span>
+                                                <span class="badge-blue px-2">Action: Software Update</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('') : `
+                                <div class="text-center p-10 text-slate-400">
+                                    <p>Wonderful! No critical patches required for your monitored assets.</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="premium-card">
+                        <div class="section-header">
+                            <div class="icon-box activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
+                            <h3>General Best Practices</h3>
+                        </div>
+                        <div class="content grid grid-cols-2 gap-4" style="display: grid;">
+                            <div class="best-practice-card">
+                                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">NETWORK</div>
+                                <div class="text-sm font-semibold">Enable Zero-Trust Policies</div>
+                                <p class="text-xs text-slate-500 mt-1">Review your firewall rules for any unused open ports (E.g. SSH, RDP).</p>
+                            </div>
+                            <div class="best-practice-card">
+                                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">IDENTITY</div>
+                                <div class="text-sm font-semibold">Rotate Administrative Credentials</div>
+                                <p class="text-xs text-slate-500 mt-1">Ensure all critical services use Multi-Factor Authentication.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-4">
+                    <div class="premium-card mb-6 border-blue" style="border-top: 5px solid #3b82f6;">
+                        <div class="content text-center py-8">
+                            <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Safety Readiness</div>
+                            <div class="text-6xl font-black text-slate-900 mb-2">84%</div>
+                            <p class="text-xs text-slate-500">Your organization is significantly ahead of the industry average (62%).</p>
+                            <button class="btn-action w-full mt-6 justify-center">Generate Safety Report</button>
+                        </div>
+                    </div>
+
+                    <div class="premium-card">
+                        <div class="section-header">
+                          <h3>Upcoming Deadlines</h3>
+                        </div>
+                        <div class="content">
+                            <div class="deadline-item">
+                                <div class="text-xs font-bold text-slate-800">Patch CVE-2025-69437</div>
+                                <div class="text-[10px] text-red-500 font-bold mt-1">DUE IN 2 DAYS</div>
+                            </div>
+                            <div class="deadline-item mt-4">
+                                <div class="text-xs font-bold text-slate-800">Audit External Assets</div>
+                                <div class="text-[10px] text-slate-400 font-bold mt-1">DUE IN 1 WEEK</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+
+    AssetProfile: (assets) => `
+        <div class="fade-in">
+            <div class="section-title-box mb-8">
+                <h2 class="text-2xl font-black text-slate-900">Your Corporate Asset Profile</h2>
+                <p class="text-slate-500">Select the technologies your company uses to receive personalized threat alerts.</p>
+            </div>
+
+            <div class="premium-card p-10">
+                <div class="grid grid-cols-4 gap-6" style="display: grid;">
+                    ${['Linux Core', 'Windows Server', 'Apache', 'Nginx', 'Docker', 'Kubernetes', 'MySQL', 'PostgreSQL', 'Redis', 'Python', 'Go', 'PHP', 'WordPress', 'Outlook', 'Azure', 'AWS'].map(asset => `
+                        <div class="asset-toggle-box ${assets && assets.includes(asset) ? 'active' : ''}" onclick="app.toggleAsset('${asset}')">
+                            <div class="asset-icon bg-slate-100">${asset[0]}</div>
+                            <span class="text-sm font-bold text-slate-700">${asset}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button class="btn-premium">Save Corporate Profile</button>
             </div>
         </div>
     `,
 
     Filters: ({ currentSeverity }) => `
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex gap-4" style="width: 100%;">
-                <div style="width: 200px;">
-                    <select class="input" onchange="app.handleFilterChange(this.value)">
-                        <option value="ALL" ${currentSeverity === 'ALL' ? 'selected' : ''}>Severity: All</option>
-                        <option value="CRITICAL" ${currentSeverity === 'CRITICAL' ? 'selected' : ''}>Critical</option>
-                        <option value="HIGH" ${currentSeverity === 'HIGH' ? 'selected' : ''}>High</option>
-                        <option value="MEDIUM" ${currentSeverity === 'MEDIUM' ? 'selected' : ''}>Medium</option>
-                        <option value="LOW" ${currentSeverity === 'LOW' ? 'selected' : ''}>Low</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 fade-in">
+            <div class="section-title-box">
+                <h2 class="text-xl font-bold text-slate-800">Intelligence Feed</h2>
+                <p class="text-sm text-slate-500">Real-time tracking of new vulnerabilities and exploits.</p>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="search-premium border">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 ml-3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     <input type="text" 
-                           class="input" 
-                           placeholder="Search CVE ID..." 
+                           class="search-input" 
+                           placeholder="Search CVE ID or technology..." 
                            oninput="app.handleSearch(this.value)">
+                </div>
+                <div class="filter-premium border">
+                    <select class="filter-select" onchange="app.handleFilterChange(this.value)">
+                        <option value="ALL" ${currentSeverity === 'ALL' ? 'selected' : ''}>Risk: All Severities</option>
+                        <option value="CRITICAL" ${currentSeverity === 'CRITICAL' ? 'selected' : ''}>Risk: Critical Only</option>
+                        <option value="HIGH" ${currentSeverity === 'HIGH' ? 'selected' : ''}>Risk: High & Up</option>
+                        <option value="MEDIUM" ${currentSeverity === 'MEDIUM' ? 'selected' : ''}>Risk: Medium & Up</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -53,39 +226,70 @@ const Components = {
     CVETable: (cves) => {
         if (!cves || cves.length === 0) {
             return `
-                <div class="card" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                    No CVEs found matching your criteria.
+                <div class="premium-card text-center p-20 fade-in">
+                    <div class="mb-4 text-slate-300">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto;"><path d="m21 21-4.3-4.3"/><circle cx="11" cy="11" r="8"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-slate-600 mb-2">No matching intelligence found</h3>
+                    <p class="text-slate-400 max-w-xs mx-auto">Try adjusting your filters or sync with the NVD to fetch the latest records.</p>
                 </div>
             `;
         }
 
-        const rows = cves.map(cve => `
-            <tr>
-                <td><a href="#/cve/${cve.cve_id}" class="code-font" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">${cve.cve_id}</a></td>
-                <td><span class="badge badge-${(cve.severity || 'unknown').toLowerCase()}">${cve.severity || 'Unknown'}</span></td>
-                <td>${cve.cvss_score || 'N/A'}</td>
-                <td><span class="badge badge-${(cve.status || 'unknown').toLowerCase()}">${cve.status || 'Unknown'}</span></td>
-                <td>${new Date(cve.published_date).toLocaleDateString()}</td>
-                <td>
-                    <a href="#/cve/${cve.cve_id}" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">View</a>
+        const rows = cves.map(cve => {
+            const severityClass = (cve.severity || 'unknown').toLowerCase();
+            const score = cve.cvss_score || 0;
+            const shortDesc = cve.description ? (cve.description.length > 120 ? cve.description.substring(0, 120) + '...' : cve.description) : 'No description provided';
+
+            return `
+            <tr class="table-row">
+                <td class="p-4 align-middle">
+                    <a href="#/cve/${cve.cve_id}" class="cve-id-link">${cve.cve_id}</a>
+                    <div class="text-xs text-slate-400 mt-1 uppercase font-bold tracking-tighter">${cve.cwe_id || 'CWE-NA'}</div>
+                </td>
+                <td class="p-4 align-middle">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-semibold text-slate-700 leading-tight">${shortDesc}</span>
+                        <div class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Ref: ${cve.status || 'UNRANKED'}</div>
+                    </div>
+                </td>
+                <td class="p-4 align-middle">
+                    <div class="flex items-center gap-3">
+                        <div class="small-meter-bg">
+                            <div class="small-meter-fill bg-${severityClass}" style="width: ${score * 10}%"></div>
+                        </div>
+                        <span class="text-sm font-black text-${severityClass}-text">${score.toFixed(1)}</span>
+                    </div>
+                </td>
+                <td class="p-4 align-middle">
+                    <span class="badge badge-outline-${severityClass}">${cve.severity || 'N/A'}</span>
+                </td>
+                <td class="p-4 align-middle">
+                    <div class="text-xs font-semibold text-slate-600">${new Date(cve.published_date).toLocaleDateString()}</div>
+                </td>
+                <td class="p-4 align-middle text-right">
+                    <a href="#/cve/${cve.cve_id}" class="btn-action">
+                        Investigate
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+                    </a>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
 
         return `
-            <div class="table-container">
-                <table>
+            <div class="premium-table-wrapper fade-in overflow-x-auto">
+                <table class="w-full text-left table-auto">
                     <thead>
-                        <tr>
-                            <th>CVE ID</th>
-                            <th>Severity</th>
-                            <th>CVSS</th>
-                            <th>Status</th>
-                            <th>Published</th>
-                            <th>Action</th>
+                        <tr class="border-b border-slate-100">
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Threat Identifier</th>
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Vulnerability Summary</th>
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Bite Intensity</th>
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Risk Level</th>
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Timestamp</th>
+                            <th class="p-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-slate-50">
                         ${rows}
                     </tbody>
                 </table>
