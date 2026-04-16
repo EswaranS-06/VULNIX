@@ -84,5 +84,19 @@ const api = {
         }
         const response = await fetch(`${API_BASE_URL}/cves/${id}`);
         return response.json();
+    },
+
+    async getPlannerCVEs(assets) {
+        if (USE_MOCK_DATA) {
+            const assetList = assets.map(a => a.split(' ')[0].toLowerCase());
+            const filtered = mockData.filter(cve => {
+                const desc = cve.description.toLowerCase();
+                return assetList.some(asset => desc.includes(asset));
+            });
+            return new Promise(resolve => setTimeout(() => resolve(filtered), 400));
+        }
+        const assetParam = assets.join(',');
+        const response = await fetch(`${API_BASE_URL}/planner?assets=${encodeURIComponent(assetParam)}`);
+        return response.json();
     }
 };

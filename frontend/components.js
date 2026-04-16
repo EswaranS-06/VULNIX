@@ -1,6 +1,11 @@
 const Components = {
-    Sidebar: (currentRoute) => `
-        <aside class="sidebar">
+    Sidebar: (currentRoute, isCollapsed) => `
+        <aside class="sidebar ${isCollapsed ? 'collapsed' : ''}">
+            <button class="sidebar-toggle" onclick="app.toggleSidebar()" aria-label="Toggle Sidebar">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
+                    <path d="${isCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'}" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
             <div class="sidebar-logo">
                 <div class="logo-box">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -8,15 +13,15 @@ const Components = {
                 <span class="font-bold text-lg tracking-tight">SafetyIntel Hub</span>
             </div>
             <nav class="nav-list">
-                <a href="#/" class="nav-item ${currentRoute === 'dashboard' ? 'active' : ''}">
+                <a href="#/" class="nav-item ${currentRoute === 'dashboard' ? 'active' : ''}" title="Threat Dashboard">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     <span>Threat Dashboard</span>
                 </a>
-                <a href="#/planner" class="nav-item ${currentRoute === 'planner' ? 'active' : ''}">
+                <a href="#/planner" class="nav-item ${currentRoute === 'planner' ? 'active' : ''}" title="Safety Planner">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><rect x="2" y="9" width="20" height="6" rx="2"/></svg>
                     <span>Safety Planner</span>
                 </a>
-                <a href="#/assets" class="nav-item ${currentRoute === 'assets' ? 'active' : ''}">
+                <a href="#/assets" class="nav-item ${currentRoute === 'assets' ? 'active' : ''}" title="Asset Profile">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"/><path d="M12 6v6l4 2"/></svg>
                     <span>Asset Profile</span>
                 </a>
@@ -86,7 +91,7 @@ const Components = {
         </div>
     `,
 
-    SafetyPlanner: (criticalCVEs) => `
+    SafetyPlanner: (plannerCVEs, fixedCVEs = []) => `
         <div class="fade-in">
             <div class="section-title-box mb-8">
                 <h2 class="text-2xl font-black text-slate-900">Safety Action Planner</h2>
@@ -101,23 +106,30 @@ const Components = {
                             <h3>Immediate Mitigation Queue</h3>
                         </div>
                         <div class="content">
-                            ${criticalCVEs.length > 0 ? criticalCVEs.map((cve, i) => `
-                                <div class="planner-item ${i === 0 ? 'priority-high' : ''}">
+                            ${plannerCVEs.length > 0 ? plannerCVEs.map((cve, i) => {
+        const isFixed = fixedCVEs.includes(cve.cve_id);
+        return `
+                                <div class="planner-item ${i === 0 && !isFixed ? 'priority-high' : ''} ${isFixed ? 'opacity-50' : ''}">
                                     <div class="flex items-start gap-4">
-                                        <div class="check-box"></div>
-                                        <div>
-                                            <div class="text-sm font-bold text-slate-800">${cve.cve_id} - Patching Required</div>
+                                        <div class="check-box ${isFixed ? 'checked' : ''}" 
+                                             onclick="app.handleToggleFix('${cve.cve_id}')"
+                                             style="cursor: pointer; position: relative;">
+                                             ${isFixed ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" style="position: absolute; width: 14px; top: 1px; left: 1px;"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div class="text-sm font-bold ${isFixed ? 'line-through text-slate-400' : 'text-slate-800'}">${cve.cve_id} - Patching Required</div>
                                             <p class="text-xs text-slate-500 mt-1">${cve.description.substring(0, 150)}...</p>
                                             <div class="flex gap-2 mt-3">
-                                                <span class="badge badge-outline-critical">Priority: High</span>
+                                                <span class="badge ${isFixed ? 'badge-outline-unknown' : 'badge-outline-critical'}">${isFixed ? 'Resolved' : 'Priority: High'}</span>
                                                 <span class="badge-blue px-2">Action: Software Update</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            `).join('') : `
+                                `;
+    }).join('') : `
                                 <div class="text-center p-10 text-slate-400">
-                                    <p>Wonderful! No critical patches required for your monitored assets.</p>
+                                    <p>${app.state.assets.length === 0 ? 'No corporate assets selected. Define your profile in Assets.' : 'Wonderful! No critical patches found for your monitored systems.'}</p>
                                 </div>
                             `}
                         </div>

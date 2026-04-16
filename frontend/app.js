@@ -7,7 +7,11 @@ const app = {
         currentView: 'dashboard', // dashboard | detail | planner | assets
         currentRoute: 'dashboard',
         selectedCVE: null,
-        assets: ['Linux Core', 'Docker', 'MySQL']
+        assets: ['Linux Core', 'Docker', 'MySQL'],
+        fixedCVEs: JSON.parse(localStorage.getItem('fixedCVEs') || '[]'),
+        plannerCVEs: [],
+        plannerLoading: false,
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true'
     },
 
     init() {
@@ -39,6 +43,7 @@ const app = {
         } else if (hash === '#/planner') {
             this.state.currentView = 'planner';
             this.state.currentRoute = 'planner';
+            this.fetchPlannerData();
             this.render();
         } else if (hash === '#/assets') {
             this.state.currentView = 'assets';
@@ -106,6 +111,63 @@ const app = {
             this.state.assets.push(asset);
         }
         this.render();
+        // Sync with backend for the planner view
+        this.fetchPlannerData();
+    },
+
+    handleToggleFix(cveId) {
+        const index = this.state.fixedCVEs.indexOf(cveId);
+        if (index > -1) {
+            this.state.fixedCVEs.splice(index, 1);
+        } else {
+            this.state.fixedCVEs.push(cveId);
+        }
+        localStorage.setItem('fixedCVEs', JSON.stringify(this.state.fixedCVEs));
+        this.render();
+    },
+
+    getPlannerCVEs() {
+        if (this.state.assets.length === 0) return [];
+
+        return this.state.cves.filter(cve => {
+            const description = (cve.description || '').toLowerCase();
+            const cweId = (cve.cwe_id || '').toLowerCase();
+
+            let configs = [];
+            try {
+                configs = cve.configurations ? JSON.parse(cve.configurations) : [];
+            } catch (e) { }
+
+            return this.state.assets.some(asset => {
+                const term = asset.split(' ')[0].toLowerCase(); // 'Linux Core' -> 'linux'
+                return description.includes(term) ||
+                    cweId.includes(term) ||
+                    configs.some(c => c.toLowerCase().includes(term));
+            });
+        });
+    },
+    async fetchPlannerData() {
+        if (this.state.assets.length === 0) {
+            this.state.plannerCVEs = [];
+            this.render();
+            return;
+        }
+        this.state.plannerLoading = true;
+        this.render();
+        try {
+            this.state.plannerCVEs = await api.getPlannerCVEs(this.state.assets);
+        } catch (error) {
+            console.error('Failed to fetch planner data:', error);
+        } finally {
+            this.state.plannerLoading = false;
+            this.render();
+        }
+    },
+
+    toggleSidebar() {
+        this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
+        localStorage.setItem('sidebarCollapsed', this.state.sidebarCollapsed);
+        this.render();
     },
 
     getFilteredCVEs() {
@@ -148,8 +210,11 @@ const app = {
                 content = Components.CVEDetail(this.state.selectedCVE);
             }
         } else if (this.state.currentView === 'planner') {
-            const criticals = this.state.cves.filter(c => c.severity === 'CRITICAL');
-            content = Components.SafetyPlanner(criticals);
+            if (this.state.plannerLoading && !this.state.plannerCVEs.length) {
+                content = '<div style="text-align: center; margin-top: 4rem;">Analyzing Asset Intelligence...</div>';
+            } else {
+                content = Components.SafetyPlanner(this.state.plannerCVEs, this.state.fixedCVEs);
+            }
         } else if (this.state.currentView === 'assets') {
             content = Components.AssetProfile(this.state.assets);
         } else {
@@ -164,8 +229,8 @@ const app = {
         }
 
         appEl.innerHTML = `
-            <div class="layout-wrapper">
-                ${Components.Sidebar(this.state.currentRoute)}
+            <div class="layout-wrapper ${this.state.sidebarCollapsed ? 'sidebar-minimized' : ''}">
+                ${Components.Sidebar(this.state.currentRoute, this.state.sidebarCollapsed)}
                 <main class="main-content">
                     ${content}
                 </main>

@@ -46,3 +46,28 @@ def get_cves_by_severity(level: str):
     cves = db.query(CVE).filter(CVE.severity == level.upper()).all()
     db.close()
     return cves
+
+
+@router.get("/planner")
+def get_planner_cves(assets: str = ""):
+    db = SessionLocal()
+    if not assets:
+        db.close()
+        return []
+
+    from sqlalchemy import or_
+    asset_list = [a.strip().split(" ")[0].lower() for a in assets.split(",") if a.strip()]
+
+    filters = []
+    for asset in asset_list:
+        filters.append(CVE.description.ilike(f"%{asset}%"))
+        filters.append(CVE.cwe_id.ilike(f"%{asset}%"))
+        filters.append(CVE.configurations.ilike(f"%{asset}%"))
+
+    if not filters:
+        db.close()
+        return []
+
+    cves = db.query(CVE).filter(or_(*filters)).order_by(CVE.published_date.desc()).all()
+    db.close()
+    return cves
